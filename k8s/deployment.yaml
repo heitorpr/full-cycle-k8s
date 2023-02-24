@@ -17,7 +17,33 @@ spec:
     spec:
       containers:
       - name: "goserver"
-        image: "heitorpr/hello-go:v7"
+        image: "heitorpr/hello-go:v5.5"
+
+        startupProbe: # Ensure the initial initialization so readiness/liveness can start working together (avoid crashloopback)
+          httpGet:
+            path: /healthz
+            port: 8000 # porta do CONTAINER
+          periodSeconds: 3 # time interval between tests
+          failureThreshold: 30 # how many failures to restart container
+        
+        readinessProbe:
+          httpGet:
+            path: /healthz
+            port: 8000
+          periodSeconds: 3 # time interval between tests
+          failureThreshold: 1 # how many failures to restart container
+          # initialDelaySeconds: 10 # when you know your application will take at least 10 seconds to start, you can start reading after 10 seconds
+        
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 8000 # porta do CONTAINER
+          periodSeconds: 5 # time interval between tests
+          failureThreshold: 1 # how many failures to restart container
+          timeoutSeconds: 1 # how much time to abort the request
+          successThreshold: 1
+          initialDelaySeconds: 15 
+
         envFrom:
           - configMapRef:
               name: goserver-env

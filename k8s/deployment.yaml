@@ -17,7 +17,15 @@ spec:
     spec:
       containers:
       - name: "goserver"
-        image: "heitorpr/hello-go:v5.5"
+        image: "heitorpr/hello-go:v5.6"
+
+        resources:
+          requests: # -> Minimum cpu/memory to run the pod, it reserves these configurations from machine per pod
+            cpu: "100m" # m -> milicores
+            memory: "20Mi"
+          limits:
+            cpu: "500m"
+            memory: "25Mi"
 
         startupProbe: # Ensure the initial initialization so readiness/liveness can start working together (avoid crashloopback)
           httpGet:
@@ -52,11 +60,13 @@ spec:
         volumeMounts:
           - mountPath: "/go/myfamily"
             name: config
-        resources:
-          limits:
-            memory: "128Mi"
-            cpu: "500m"
+            readOnly: true
+          - mountPath: "/go/pvc"
+            name: goserver-pvc
       volumes:
+        - name: goserver-pvc
+          persistentVolumeClaim: # Give filesystem access with a persistent storage to pods
+            claimName: goserver-pvc
         - name: config
           configMap:
             name: configmap-family
